@@ -1,9 +1,11 @@
 # edgeleap.github.io
-landingpage for edgeleap
+
+Landingpage for edgeleap
 
 The landing page features a "darkmode devtools" aesthetic, a vertical stack layout, and a responsive design.
 
-### Key Design Choices[1]
+### Key Design Choices
+
 1.  **Devtools Vibe**: Used a dark theme (`#0d1117`) similar to GitHub's dark mode or VS Code. The font stack is purely monospace (`SFMono`, `Consolas`, etc.) to mimic a coding environment.
 2.  **Vertical Stack**: The layout uses a single column flex container (`align-items: center`) to stack the title, hero, instructions, and features vertically.
 3.  **Hero Section**:
