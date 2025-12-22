@@ -33,8 +33,9 @@ curl -fsSL "$ASSET_URL" -o "$TMP_SCRIPT"
 
 # Install the script permanently (requires sudo for /usr/local/bin)
 echo "Installing to $INSTALL_PATH..."
-sudo mv "$TMP_SCRIPT" "$INSTALL_PATH"
+sudo cp "$TMP_SCRIPT" "$INSTALL_PATH"  # Use cp instead of mv to allow overwriting
 sudo chmod +x "$INSTALL_PATH"
+rm "$TMP_SCRIPT"  # Clean up temp file
 
 echo "✅ diffsense installed successfully!"
 echo "Run 'diffsense' in any git repository to get started."
