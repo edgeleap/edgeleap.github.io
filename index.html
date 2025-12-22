@@ -1,12 +1,9 @@
- 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title>DiffSense - AI Git Commit Generator</title>
-    
     <style>
         :root {
             --bg-color: #0d1117;
@@ -16,13 +13,23 @@
             --text-secondary: #8b949e;
             --accent-green: #2ea043;
             --accent-blue: #58a6ff;
+            --accent-orange: #f0883e;
             --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        }
+
+        /* Global link styles */
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
-            font-family: var(--font-mono); /* Devtools vibe usually means mono everywhere */
+            font-family: var(--font-mono);
             margin: 0;
             padding: 0;
             display: flex;
@@ -31,21 +38,58 @@
             line-height: 1.6;
         }
 
-        /* --- Layout Container --- */
         .container {
             max-width: 800px;
             width: 100%;
-            padding: 40px 20px;
+            padding: 40px 20px 30px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 40px; /* Vertical stack spacing */
+            gap: 28px;
         }
 
-        /* --- Header Section --- */
         header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 4px;
+        }
+
+        /* Badge row */
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+        .badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border-color);
+            background: #111827;
+            color: var(--text-secondary);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .badge-label { color: var(--text-primary); }
+        .badge-value {
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: #1f2937;
+            color: var(--accent-orange);
+            min-width: 2ch;
+            text-align: center;
+        }
+
+        /* Cat head above title */
+        .cat-head-wrapper {
+            margin-bottom: 10px;
+        }
+        .cat-head-img {
+            width: 144px;
+            height: auto;
         }
 
         h1 {
@@ -61,18 +105,124 @@
             margin-bottom: 8px;
         }
 
-        .sub-sub-title {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            font-weight: normal;
-            background: var(--card-bg);
-            padding: 4px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            display: inline-block;
+        /* CTA: button + curl row */
+        .cta-stack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
         }
 
-        /* --- Hero Section (Terminal + Popover) --- */
+        /* Row that contains button (label positioned absolutely) */
+        .step1-row {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 1.2em; /* ensure space for label */
+        }
+
+        /* Step 1 label: absolutely positioned to left of button */
+        .step1-label {
+            position: absolute;
+            right: 100%;
+            margin-right: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .step-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .step3-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .primary-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--accent-blue);
+            background: linear-gradient(135deg, #1f2933, #111827);
+            color: #ffffff;
+            font-size: 0.9rem;
+            text-decoration: none;
+            cursor: pointer;
+            gap: 8px;
+        }
+        .primary-button:hover {
+            background: linear-gradient(135deg, #243447, #111827);
+        }
+        .primary-button span.icon { font-size: 1.1rem; }
+
+
+
+        .curl-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .curl-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .curl-field {
+            flex: 1 1 auto;
+            max-width: 420px;
+            background: #010409;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4);
+            min-width: 260px;
+        }
+
+        .curl-prefix {
+            color: var(--accent-green);
+            margin-right: 6px;
+        }
+
+        .curl-command {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            user-select: all;
+        }
+
+        .copy-button {
+            padding: 6px 10px;
+            font-size: 0.78rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: #111827;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .copy-button:hover {
+            background: #1f2937;
+        }
+
+        /* Hero section */
         .hero-section {
             position: relative;
             width: 100%;
@@ -80,8 +230,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin-bottom: 18px;
         }
-
         .terminal-window {
             width: 100%;
             background: #010409;
@@ -93,7 +243,6 @@
             text-align: left;
             z-index: 1;
         }
-
         .window-header {
             background: #161b22;
             padding: 8px 12px;
@@ -101,7 +250,6 @@
             gap: 6px;
             border-bottom: 1px solid var(--border-color);
         }
-
         .dot { width: 10px; height: 10px; border-radius: 50%; }
         .red { background: #ff5f56; }
         .yellow { background: #ffbd2e; }
@@ -111,8 +259,6 @@
             padding: 15px;
             color: var(--text-primary);
         }
-
-        .command { color: var(--text-primary); }
         .prompt { color: var(--accent-green); }
         .branch { color: var(--accent-blue); }
         .output { color: var(--text-secondary); }
@@ -124,14 +270,12 @@
             animation: blink 1s infinite;
             vertical-align: middle;
         }
+        @keyframes blink { 0%,100% {opacity:1;} 50% {opacity:0;} }
 
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-        /* Popover styling */
         .popover-window {
             position: absolute;
             bottom: -30px;
-            right: -20px; /* Offset for layered effect */
+            right: -20px;
             background: #1f2428;
             border: 1px solid var(--accent-blue);
             border-radius: 6px;
@@ -141,13 +285,11 @@
             z-index: 2;
             animation: float 4s ease-in-out infinite;
         }
-        
         @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-5px); }
             100% { transform: translateY(0px); }
         }
-
         .popover-content {
             font-size: 0.95rem;
             color: #ffffff;
@@ -155,45 +297,11 @@
             padding-left: 10px;
         }
 
-        /* --- Instruction Section --- */
-        .instruction-section {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 20px;
-            width: 100%;
-            max-width: 650px;
-        }
-
-        .step {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: baseline;
-        }
-
-        .step-number {
-            color: var(--accent-green);
-            margin-right: 10px;
-            font-weight: bold;
-        }
-
-        code {
-            background: rgba(110, 118, 129, 0.4);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #ff7b72; /* Reddish code color like GitHub */
-            font-size: 0.9em;
-        }
-        
-        a { color: var(--accent-blue); text-decoration: none; }
-        a:hover { text-decoration: underline; }
-
-        /* --- Feature Section --- */
         .features-container {
             width: 100%;
             text-align: center;
+            margin-bottom: 12px;
         }
-        
         .feature-title {
             font-size: 1.5rem;
             margin-bottom: 25px;
@@ -201,14 +309,12 @@
             display: inline-block;
             padding-bottom: 5px;
         }
-
         .feature-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 15px;
             text-align: left;
         }
-
         .feature-box {
             background: transparent;
             border: 1px solid var(--border-color);
@@ -216,31 +322,36 @@
             border-radius: 6px;
             transition: border-color 0.2s;
         }
-
-        .feature-box:hover {
-            border-color: var(--text-secondary);
-        }
-
+        .feature-box:hover { border-color: var(--text-secondary); }
         .feature-box h3 {
             margin: 0 0 8px 0;
             font-size: 1rem;
             color: #ffffff;
         }
-
         .feature-box p {
             margin: 0;
             font-size: 0.9rem;
             color: var(--text-secondary);
         }
 
-        /* --- Footer --- */
-        footer {
-            margin-top: 20px;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
+        /* Sleeping cat near footer */
+        .footer-cat-wrapper {
+            margin-top: -20px;
+            margin-bottom: 2px;
+        }
+        .cat-sleeping-img {
+            width: 110px;
+            height: auto;
+            opacity: 0.9;
         }
 
-        /* Responsive adjustments */
+        footer {
+            margin-top: -24px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
         @media (max-width: 600px) {
             .popover-window {
                 position: relative;
@@ -255,131 +366,185 @@
 </head>
 <body>
 
-    <div class="container">
-        
-        <!-- Header -->
-        <header>
-            <h1>DiffSense</h1>
-            <div class="subtitle">A free git commit message generator powered by Apple Intelligence</div>
-            
-            <div class="sub-sub-title">Using Apple Intelligence • Local & Private • No API Keys</div>
-            
-        </header>
+<div class="container">
 
-        <!-- Hero Section -->
-        <div class="hero-section">
-            <div class="terminal-window">
-                <div class="window-header">
-                    <div class="dot red"></div>
-                    <div class="dot yellow"></div>
-                    <div class="dot green"></div>
-                </div>
-                <div class="terminal-body">
-                    <div>
-                        <span class="prompt">$</span> git status
-                    </div>
-                    <div class="output">
-                        On branch <span class="branch">main</span><br>
-                        Changes not staged for commit:<br>
-                        &nbsp;&nbsp;&nbsp;&nbsp;modified: src/app.js<br>
-                        &nbsp;&nbsp;&nbsp;&nbsp;modified: styles.css
-                    </div>
-                    <div style="margin-top: 10px;">
-                        <span class="prompt">$</span> git add .
-                    </div>
-                    <div>
-                        <span class="prompt">$</span> diffsense<span class="cursor"></span>
-                    </div>
-                </div>
+    <header>
+        <!-- Cat head SVG (file, not edited) -->
+        <div class="cat-head-wrapper">
+            <img src="https://edgeleap.github.io/head.svg"
+            alt="DiffSense cat head"
+            class="cat-head-img">
+        </div>
+
+        <h1>DiffSense</h1>
+        <div class="subtitle">A free git commit message generator powered by Apple Intelligence</div>
+
+        <!-- Badges now below subtitle -->
+        <div class="badge-row">
+            <a class="badge" href="https://github.com/edgeleap/diffsense/releases">
+                <span class="badge-label">Total downloads</span>
+                <span class="badge-value" id="downloads-count">0</span>
+            </a>
+            <a class="badge" href="https://github.com/edgeleap/diffsense/stargazers">
+                <span class="badge-label">Stars on GitHub</span>
+                <span class="badge-value" id="stars-count">0</span>
+            </a>
+            <a class="badge" href="https://github.com/edgeleap/diffsense/forks">
+                <span class="badge-label">Forks on GitHub</span>
+                <span class="badge-value" id="forks-count">0</span>
+            </a>
+        </div>
+
+        <!-- CTA stack -->
+        <div class="cta-stack">
+            <div class="step1-row">
+                <a class="primary-button" href="https://www.icloud.com/shortcuts/eb12c7d8e47742c9b32ddc1f277fc8bc">
+                    <span class="icon">⬇️</span>
+                    <span>Download Shortcut</span>
+                </a>
             </div>
 
-            <div class="popover-window">
-                <div class="popover-content">
-                    Add user authentication validation<br>
-                    Implement token validation and error handling
+            <div class="curl-row">
+                <span class="curl-label">Install in Terminal:</span>
+                <div class="curl-field" id="curl-field">
+                    <span class="curl-prefix">$</span>
+                    <span class="curl-command" id="curl-command">curl https://edgeleap.github.io/install.sh</span>
+                </div>
+                <button class="copy-button" type="button" id="copy-btn">
+                    📋 Copy
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="terminal-window">
+            <div class="window-header">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+            </div>
+            <div class="terminal-body">
+                <div><span class="prompt">$</span> git status</div>
+                <div class="output">
+                    On branch <span class="branch">main</span><br>
+                    Changes not staged for commit:<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;modified: src/app.js<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;modified: styles.css
+                </div>
+                <div style="margin-top: 10px;">
+                    <span class="prompt">$</span> git add .
+                </div>
+                <div>
+                    <span class="prompt">$</span> diffsense<span class="cursor"></span>
                 </div>
             </div>
         </div>
 
-        <!-- Instruction Section -->
-        <div class="instruction-section">
-            <div class="step">
-                
-                <span class="step-number">1.</span>
-                
-                <span>Install: <code>curl https://edgeleap.github.io/diffsense.sh</code></span>
-            </div>
-            <div class="step">
-                
-                <span class="step-number">2.</span>
-                
-                <span><a href="https://www.icloud.com/shortcuts/6d93e2d1f09e4e8aa55b78524fb42dae">Download Shortcut</a> (Access Apple Intelligence API)</span>
-            </div>
-            <div class="step">
-                
-                <span class="step-number">3.</span>
-                
-                
-                <span>In terminal call <code>cd ~/your-project</code> and then call: <code>diffsense</code></span>
-                
+        <div class="popover-window">
+            <div class="popover-content">
+                Add user authentication validation<br>
+                Implement token validation and error handling
             </div>
         </div>
-
-        <!-- Feature Section -->
-        <div class="features-container">
-            
-            <div class="feature-title">Features</div>
-            
-            
-            <div class="feature-grid">
-                <!-- Feature 1 -->
-                <div class="feature-box">
-                    <h3>🔓 Local & private on Apple Silicon</h3>
-                    
-                    <p>DiffSense turns your git diff into clear, privacy-friendly commit messages</p>
-                    
-                </div>
-                <!-- Feature 2 -->
-                <div class="feature-box">
-                    <h3>⚙️ Customizable git message</h3>
-                    
-                    <p>Default, minimal, verbose. Editable before committing</p>
-                    
-                </div>
-                <!-- Feature 3 -->
-                <div class="feature-box">
-                    <h3>⚡ Fast diff algorithm</h3>
-                    <p>Handles any diff size with ease. Instantly</p>
-                </div>
-                <!-- Feature 4 -->
-                <div class="feature-box">
-                    <h3>🦜 Multiple AI models</h3>
-                    
-                    <p>Local AI, Private Cloud Compute or ChatGPT</p>
-                    
-                </div>
-                <!-- Feature 5 -->
-                <div class="feature-box">
-                    <h3>🌎 100% opensource</h3>
-                    <p>All code is inspectable and has an MIT license</p>
-                </div>
-                <!-- Feature 6 -->
-                <div class="feature-box">
-                    <h3>🤖 AI Agent Compatible</h3>
-                    
-                    <p>Use the --nopopup to skip the review popup</p>
-                    
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <footer>
-            2025 © <a href="https://github.com/edgeleap/">EdgeLeap</a>
-        </footer>
-
     </div>
+
+    <!-- Features -->
+    <div class="features-container">
+        <div class="feature-title">Features</div>
+        <div class="feature-grid">
+            <div class="feature-box">
+                <h3>🔓 Local & private on Apple Silicon</h3>
+                <p>DiffSense turns your git diff into clear, privacy-friendly commit messages</p>
+            </div>
+            <div class="feature-box">
+                <h3>⚙️ Customizable git message</h3>
+                <p>Default, minimal, verbose. Editable before committing</p>
+            </div>
+            <div class="feature-box">
+                <h3>&#9889;&#65039; Fast diff algorithm</h3>
+                <p>Handles any diff size with ease. Instantly</p>
+            </div>
+            <div class="feature-box">
+                <h3>🦜 Multiple AI models</h3>
+                <p>Local AI, Private Cloud Compute or ChatGPT</p>
+            </div>
+            <div class="feature-box">
+                <h3>🦁 Powerful alias macros</h3>
+                <p>Prepend git add . or append git push in alias</p>
+            </div>
+            <div class="feature-box">
+                <h3>🤖 AI Agent Compatible</h3>
+                <p>Use the --nopopup to skip the review popup</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sleeping cat and footer -->
+    <div class="footer-cat-wrapper">
+        <img src="https://edgeleap.github.io/sleeping.svg"
+        alt="Sleeping cat"
+        class="cat-sleeping-img">
+    </div>
+
+    <footer>
+        2025 © <a href="https://github.com/edgeleap/">EdgeLeap</a>
+    </footer>
+
+</div>
+
+<!-- Badge + copy scripts -->
+<script>
+// Copy CURL command
+document.getElementById('copy-btn').addEventListener('click', function () {
+    var text = document.getElementById('curl-command').textContent.trim();
+    navigator.clipboard.writeText(text).then(function () {
+        var btn = document.getElementById('copy-btn');
+        var old = btn.textContent;
+        btn.textContent = '✓ Copied';
+        setTimeout(function () { btn.textContent = old; }, 1500);
+    });
+});
+
+// GitHub stars & forks
+(async function () {
+  try {
+    const res = await fetch('https://api.github.com/repos/edgeleap/diffsense');
+    if (!res.ok) return;
+    const data = await res.json();
+    document.getElementById('stars-count').textContent =
+      (data.stargazers_count ?? 0).toLocaleString();
+    document.getElementById('forks-count').textContent =
+      (data.forks_count ?? 0).toLocaleString();
+  } catch (e) {
+    // keep fallback numbers
+  }
+})();
+
+// Total downloads across all releases
+(async function () {
+  try {
+    const res = await fetch('https://api.github.com/repos/edgeleap/diffsense/releases');
+    if (!res.ok) return;
+    const releases = await res.json();
+    let total = 0;
+    if (Array.isArray(releases)) {
+      releases.forEach(r => {
+        (r.assets || []).forEach(a => {
+          total += a.download_count || 0;
+        });
+      });
+    }
+    if (total > 0) {
+      document.getElementById('downloads-count').textContent =
+        total.toLocaleString();
+    }
+  } catch (e) {
+    // keep fallback number
+  }
+})();
+</script>
 
 </body>
 </html>
- 
