@@ -504,42 +504,53 @@ document.getElementById('copy-btn').addEventListener('click', function () {
     });
 });
 
-// GitHub stars & forks
-(async function () {
+// Function to get badge values from shields.io (primary) with GitHub API fallback
+async function getBadgeValue(owner, repo, metric) {
+  // Try shields.io first
   try {
-    const res = await fetch('https://api.github.com/repos/edgeleap/diffsense');
-    if (!res.ok) return;
-    const data = await res.json();
-    document.getElementById('stars-count').textContent =
-      (data.stargazers_count ?? 0).toLocaleString();
-    document.getElementById('forks-count').textContent =
-      (data.forks_count ?? 0).toLocaleString();
-  } catch (e) {
-    // keep fallback numbers
-  }
-})();
+    const response = await fetch(`https://img.shields.io/github/${metric}/${owner}/${repo}/total.json`);
+    if (response.ok) {
+      const data = await response.json();
+      return data.message;
+    }
+  } catch (e) {}
 
-// Total downloads across all releases
-(async function () {
+  // Fallback to GitHub API
   try {
-    const res = await fetch('https://api.github.com/repos/edgeleap/diffsense/releases');
-    if (!res.ok) return;
-    const releases = await res.json();
-    let total = 0;
-    if (Array.isArray(releases)) {
+    if (metric === 'downloads') {
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases`);
+      const releases = await res.json();
+      let total = 0;
       releases.forEach(r => {
-        (r.assets || []).forEach(a => {
-          total += a.download_count || 0;
-        });
+        (r.assets || []).forEach(a => total += a.download_count || 0);
       });
+      return total.toLocaleString();
+    } else if (metric === 'stars') {
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+      const data = await res.json();
+      return (data.stargazers_count ?? 0).toLocaleString();
+    } else if (metric === 'forks') {
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+      const data = await res.json();
+      return (data.forks_count ?? 0).toLocaleString();
     }
-    if (total > 0) {
-      document.getElementById('downloads-count').textContent =
-        total.toLocaleString();
-    }
-  } catch (e) {
-    // keep fallback number
-  }
+  } catch (e) {}
+
+  return '0';
+}
+
+// Load badge values
+(async function() {
+  const owner = 'edgeleap';
+  const repo = 'diffsense';
+
+  const downloads = await getBadgeValue(owner, repo, 'downloads');
+  const stars = await getBadgeValue(owner, repo, 'stars');
+  const forks = await getBadgeValue(owner, repo, 'forks');
+
+  document.getElementById('downloads-count').textContent = downloads;
+  document.getElementById('stars-count').textContent = stars;
+  document.getElementById('forks-count').textContent = forks;
 })();
 </script>
 
