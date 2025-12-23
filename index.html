@@ -123,7 +123,6 @@
             min-height: 1.2em; /* ensure space for label */
         }
 
-        /* Step 1 label: absolutely positioned to left of button */
         .step1-label {
             position: absolute;
             right: 100%;
@@ -163,8 +162,6 @@
             background: linear-gradient(135deg, #243447, #111827);
         }
         .primary-button span.icon { font-size: 1.1rem; }
-
-
 
         .curl-row {
             display: flex;
@@ -331,7 +328,6 @@
             color: var(--text-secondary);
         }
 
-        /* Sleeping cat near footer */
         .footer-cat-wrapper {
             margin-top: -20px;
             margin-bottom: 2px;
@@ -366,7 +362,6 @@
 <div class="container">
 
     <header>
-        <!-- Cat head SVG (file, not edited) -->
         <div class="cat-head-wrapper">
             <img src="https://edgeleap.github.io/head.svg"
             alt="DiffSense cat head"
@@ -376,7 +371,6 @@
         <h1>DiffSense</h1>
         <div class="subtitle">A free git commit message generator powered by Apple Intelligence</div>
 
-        <!-- Badges now below subtitle -->
         <div class="badge-row">
             <a class="badge" href="https://github.com/edgeleap/diffsense/releases">
                 <span class="badge-label">Total downloads</span>
@@ -392,7 +386,6 @@
             </a>
         </div>
 
-        <!-- CTA stack -->
         <div class="cta-stack">
             <div class="step1-row">
                 <a class="primary-button" href="https://github.com/edgeleap/diffsense/releases/latest/download/Diffsense.shortcut">
@@ -414,7 +407,6 @@
         </div>
     </header>
 
-    <!-- Hero Section -->
     <div class="hero-section">
         <div class="terminal-window">
             <div class="window-header">
@@ -447,7 +439,6 @@
         </div>
     </div>
 
-    <!-- Features -->
     <div class="features-container">
         <div class="feature-title">Features</div>
         <div class="feature-grid">
@@ -460,7 +451,7 @@
                 <p>Default, minimal, verbose. Editable before committing</p>
             </div>
             <div class="feature-box">
-                <h3>&#9889;&#65039; Fast diff algorithm</h3>
+                <h3>⚡ Fast diff algorithm</h3>
                 <p>Handles any diff size with ease. Instantly</p>
             </div>
             <div class="feature-box">
@@ -478,7 +469,6 @@
         </div>
     </div>
 
-    <!-- Sleeping cat and footer -->
     <div class="footer-cat-wrapper">
         <img src="https://edgeleap.github.io/sleeping.svg"
         alt="Sleeping cat"
@@ -504,42 +494,86 @@ document.getElementById('copy-btn').addEventListener('click', function () {
     });
 });
 
-// GitHub stars & forks
-(async function () {
-  try {
-    const res = await fetch('https://api.github.com/repos/edgeleap/diffsense');
-    if (!res.ok) return;
-    const data = await res.json();
-    document.getElementById('stars-count').textContent =
-      (data.stargazers_count ?? 0).toLocaleString();
-    document.getElementById('forks-count').textContent =
-      (data.forks_count ?? 0).toLocaleString();
-  } catch (e) {
-    // keep fallback numbers
-  }
-})();
+// -------- Shields.io SVG parsing with 30s client-side TTL --------
+const BADGE_CACHE_TTL_MS = 30 * 1000; // 30 seconds
 
-// Total downloads across all releases
+function getCachedBadge(key) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return null;
+        const { value, ts } = parsed;
+        if (typeof ts !== 'number') return null;
+        if (Date.now() - ts > BADGE_CACHE_TTL_MS) {
+            // Stale: treat as miss (no stale value returned)
+            return null;
+        }
+        return value;
+    } catch {
+        return null;
+    }
+}
+
+function setCachedBadge(key, value) {
+    try {
+        localStorage.setItem(key, JSON.stringify({ value, ts: Date.now() }));
+    } catch {
+        // Ignore storage errors
+    }
+}
+
+async function getBadgeValue(badgeUrl, cacheKey) {
+    const cached = getCachedBadge(cacheKey);
+    if (cached !== null) return cached;
+
+    try {
+        const res = await fetch(badgeUrl, { cache: 'no-store' });
+        if (!res.ok) return null;
+
+        const svgText = await res.text();
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+        const textNodes = svgDoc.querySelectorAll('text');
+        if (!textNodes.length) return null;
+
+        const rawValue = textNodes[textNodes.length - 1].textContent.trim();
+        const value = rawValue.replace(/,/g, '');
+        setCachedBadge(cacheKey, value);
+        return value;
+    } catch {
+        return null;
+    }
+}
+
 (async function () {
-  try {
-    const res = await fetch('https://api.github.com/repos/edgeleap/diffsense/releases');
-    if (!res.ok) return;
-    const releases = await res.json();
-    let total = 0;
-    if (Array.isArray(releases)) {
-      releases.forEach(r => {
-        (r.assets || []).forEach(a => {
-          total += a.download_count || 0;
-        });
-      });
+    const base = 'https://img.shields.io/github';
+
+    const downloads = await getBadgeValue(
+        `${base}/downloads/edgeleap/diffsense/total`,
+        'badge_downloads'
+    );
+    const stars = await getBadgeValue(
+        `${base}/stars/edgeleap/diffsense`,
+        'badge_stars'
+    );
+    const forks = await getBadgeValue(
+        `${base}/forks/edgeleap/diffsense`,
+        'badge_forks'
+    );
+
+    if (downloads !== null) {
+        document.getElementById('downloads-count').textContent =
+            new Intl.NumberFormat().format(downloads);
     }
-    if (total > 0) {
-      document.getElementById('downloads-count').textContent =
-        total.toLocaleString();
+    if (stars !== null) {
+        document.getElementById('stars-count').textContent =
+            new Intl.NumberFormat().format(stars);
     }
-  } catch (e) {
-    // keep fallback number
-  }
+    if (forks !== null) {
+        document.getElementById('forks-count').textContent =
+            new Intl.NumberFormat().format(forks);
+    }
 })();
 </script>
 
