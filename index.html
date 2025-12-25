@@ -83,6 +83,16 @@
             text-align: center;
         }
 
+        /* Product Hunt badge */
+        .producthunt-badge {
+            display: inline-flex;
+            align-items: center;
+        }
+        .producthunt-badge img {
+            height: auto;
+            max-width: 200px;
+        }
+
         /* Cat head above title */
         .cat-head-wrapper {
             margin-bottom: 10px;
@@ -358,6 +368,9 @@
                 width: 90%;
             }
             h1 { font-size: 2.2rem; }
+            .producthunt-badge img {
+                max-width: 150px;
+            }
         }
     </style>
 </head>
@@ -389,6 +402,9 @@
             <a class="badge" href="https://github.com/edgeleap/diffsense/forks">
                 <span class="badge-label">Forks on GitHub</span>
                 <span class="badge-value" id="forks-count">0</span>
+            </a>
+            <a class="producthunt-badge" href="https://www.producthunt.com/products/diffsense?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-diffsense" target="_blank" rel="noopener noreferrer">
+                <img alt="DiffSense - Local AI git commit generator for Apple Silicon | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1053209&theme=dark&t=1766631016104">
             </a>
         </div>
 
