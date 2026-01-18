@@ -1,41 +1,92 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+set -e
 
-# Bootstrap installer for diffsense.
-# Intended to be hosted at: https://edgeleap.github.io/install.sh
-# Downloads the latest diffsense.sh from the latest release of edgeleap/diffsense and installs it permanently.
+APP_NAME="omni"
+GITHUB_REPO="edgeleap/omni"
+DOWNLOAD_BASE="https://github.com/${GITHUB_REPO}/releases/latest/download"
 
-OWNER="edgeleap"
-REPO="diffsense"
-API_URL="https://api.github.com/repos/${OWNER}/${REPO}/releases/latest"
-INSTALL_PATH="/usr/local/bin/diffsense"
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
-# Fetch latest release information from GitHub API
-echo "Fetching latest release for ${OWNER}/${REPO}..."
-JSON=$(curl -fsSL "$API_URL")
+echo "Installing ${APP_NAME}..."
+echo ""
 
-# Extract the download URL for diffsense.sh from the GitHub release JSON
-ASSET_URL=$(printf '%s\n' "$JSON" \
-  | grep -oE '"browser_download_url": *"[^"]*diffsense\.sh"' \
-  | head -n1 \
-  | sed -E 's/.*\"browser_download_url\": *\"([^\"]*)\".*/\1/')
+# Detect OS
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+case $OS in
+  darwin) OS_NAME="macos" ;;
+  linux)  OS_NAME="linux" ;;
+  *)      echo -e "${RED}❌ Unsupported OS: $OS${NC}"; exit 1 ;;
+esac
 
-# Verify we found the asset URL
-if [[ -z "${ASSET_URL:-}" ]]; then
-  echo "❌ No asset named 'diffsense.sh' found in latest release." >&2
-  exit 1
+# Detect architecture
+ARCH=$(uname -m)
+case $ARCH in
+  x86_64|amd64) ARCH_NAME="x64" ;;
+  arm64|aarch64) ARCH_NAME="arm64" ;;
+  *)            echo -e "${RED}❌ Unsupported architecture: $ARCH${NC}"; exit 1 ;;
+esac
+
+echo "→ Detected: ${OS_NAME} (${ARCH_NAME})"
+
+# Build artifact name
+ARTIFACT="${APP_NAME}-${OS_NAME}-${ARCH_NAME}.tar.gz"
+URL="${DOWNLOAD_BASE}/${ARTIFACT}"
+
+echo "→ Downloading from: ${URL}"
+
+# Create temp directory
+TMP_DIR=$(mktemp -d)
+trap "rm -rf $TMP_DIR" EXIT
+
+# Download
+curl -fsSL "$URL" -o "$TMP_DIR/archive.tar.gz"
+
+# Extract
+echo "→ Extracting..."
+tar -xzf "$TMP_DIR/archive.tar.gz" -C "$TMP_DIR"
+
+# Install based on OS
+if [ "$OS_NAME" = "macos" ]; then
+  INSTALL_PATH="/Applications/${APP_NAME}.app"
+  
+  echo "→ Installing to ${INSTALL_PATH}..."
+  
+  # Remove quarantine attribute
+  xattr -cr "$TMP_DIR/${APP_NAME}.app" 2>/dev/null || true
+  
+  # Remove old version if exists
+  [ -d "$INSTALL_PATH" ] && rm -rf "$INSTALL_PATH"
+  
+  mv "$TMP_DIR/${APP_NAME}.app" /Applications/
+  
+  echo ""
+  echo -e "${GREEN}✓ Installed to /Applications/${APP_NAME}.app${NC}"
+  echo "  Open with: open /Applications/${APP_NAME}.app"
+  echo "  Or search '${APP_NAME}' in Spotlight"
+
+elif [ "$OS_NAME" = "linux" ]; then
+  INSTALL_DIR="$HOME/.local/bin"
+  INSTALL_PATH="$INSTALL_DIR/${APP_NAME}"
+  
+  echo "→ Installing to ${INSTALL_PATH}..."
+  
+  mkdir -p "$INSTALL_DIR"
+  chmod +x "$TMP_DIR/${APP_NAME}.AppImage"
+  mv "$TMP_DIR/${APP_NAME}.AppImage" "$INSTALL_PATH"
+  
+  echo ""
+  echo -e "${GREEN}✓ Installed to ${INSTALL_PATH}${NC}"
+  
+  # Check if in PATH
+  if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+    echo ""
+    echo "⚠ Add to PATH by adding this to ~/.bashrc or ~/.zshrc:"
+    echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+  fi
 fi
 
-# Download the script to a temporary location
-echo "Downloading diffsense.sh from: $ASSET_URL"
-TMP_SCRIPT="$(mktemp)"
-curl -fsSL "$ASSET_URL" -o "$TMP_SCRIPT"
-
-# Install the script permanently (requires sudo for /usr/local/bin)
-echo "Installing to $INSTALL_PATH..."
-sudo cp "$TMP_SCRIPT" "$INSTALL_PATH"  # Use cp instead of mv to allow overwriting
-sudo chmod 755 "$INSTALL_PATH"  # Set proper executable permissions (rwxr-xr-x)
-rm "$TMP_SCRIPT"  # Clean up temp file
-
-echo "✅ diffsense installed successfully!"
-echo "Run 'diffsense' in any git repository to get started."
+echo ""
+echo -e "${GREEN}✓ Done!${NC}"
